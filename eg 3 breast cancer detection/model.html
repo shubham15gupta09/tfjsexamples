@@ -12,9 +12,8 @@
             }
         });
         const convertedTrainingData =trainingData.map(({xs, ys}) => {
-            const labels = [0,1]; 
-            return{ xs: Object.values(xs), ys: Object.values(labels)};
-        });
+            return{ xs: Object.values(xs), ys: Object.values(ys)};
+        }).batch(10);
 
         const testingUrl = 'wdbc-test.csv';
         const testingData = tf.data.csv(testingUrl, {
@@ -25,9 +24,8 @@
             }
         });
         const convertedTestingData=testingData.map(({xs, ys}) => {
-            const labels = [0,1]; 
-            return{ xs: Object.values(xs), ys: Object.values([labels])};
-        });
+            return{ xs: Object.values(xs), ys: Object.values(ys)};
+        }).batch(10);
 
         const numOfFeatures =(await trainingData.columnNames()).length - 1;
 
