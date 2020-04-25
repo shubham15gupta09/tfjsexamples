@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<head></head>
+<title>y = 3x + 10</title>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
+<script>
+    async function doTraining(model) { // its a async function 
+        const history = await model.fit(x, y, { // model will fit and the result will await
+            epochs: 500, // try changing the epochs 
+            callbacks: { 
+                onEpochEnd: async (epoch, logs) => { // when the epochs end it callbacks 
+                    console.log("Epochs : " + epoch + " Loss : " + logs.loss);
+                    // this will log all he epochs ans the loss
+                }
+            }
+        });
+    }
+    // no numpy :) :)
+    const x = tf.tensor2d([1, 2, 3, 4, 5], [5, 1]); // training value and shape
+    const y = tf.tensor2d([13, 16, 19, 22, 25], [5, 1]); // training value and shape
+    const model = tf.sequential();
+    model.add(tf.layers.dense({
+        units: 1,
+        inputShape: [1]
+    }));
+    model.compile({
+        loss: "meanSquaredError", // for linear relation
+        optimizer: "sgd" //schortastic gradient descent
+    });
+    model.summary();
+    doTraining(model).then(() => { //async function so when done it callbacks 
+        alert(model.predict(tf.tensor2d([6], [1, 1])) + "\nactual : 28" );
+    });
+</script>
+<body></body>
+</html>

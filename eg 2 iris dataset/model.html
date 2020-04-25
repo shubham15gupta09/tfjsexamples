@@ -1,0 +1,71 @@
+<html>
+<head></head>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
+    <script >
+        async function run(){
+            const csvUrl = 'iris.csv';
+            const trainingData = tf.data.csv(csvUrl, {
+                columnConfigs: {
+                    species: { 
+                        isLabel: true // we r telling here that the species column is our y
+                    }
+                }
+            });
+            // trainingData contains all the data and by this we will segregate x and y 
+            const numOfFeatures = (await trainingData.columnNames()).length - 1;
+            const numOfSamples = 150; // 50 each for the 3 classes
+            const convertedData =
+                  trainingData.map(({xs, ys}) => {
+                      const labels = [
+                            ys.species == "setosa" ? 1 : 0, //1 0 0
+                            ys.species == "virginica" ? 1 : 0, //0 1 0
+                            ys.species == "versicolor" ? 1 : 0 //0 0 1
+                      ] 
+                      return{ xs: Object.values(xs), ys: Object.values(labels)};
+                      // getting x directly from x and y from the labels as one hot encoded
+                  }).batch(10); // sepearting it as a batch of 10
+            
+            const model = tf.sequential();
+            // no need to add a flatten layer as inputShape will do its work here
+            model.add(tf.layers.dense({inputShape: [numOfFeatures]  /*4*/,
+                                        activation: "sigmoid", units: 5 /*5 neuron*/ }))
+            model.add(tf.layers.dense({activation: "softmax", units: 3}));
+            model.compile({loss: "categoricalCrossentropy", 
+                           optimizer: "adam"/*tf.train.adam(0.06)*/});
+            
+            await model.fitDataset(convertedData, 
+                             {epochs:100,
+                              callbacks:{
+                                  onEpochEnd: async(epoch, logs) =>{
+                                      console.log("Epoch: " + epoch + " Loss: " + logs.loss);
+                                  }
+                              }});
+
+            // Setosa
+            const testVal1 = tf.tensor2d([4.4, 2.9, 1.4, 0.2], [1, 4]);
+            // Versicolor
+            const testVal2 = tf.tensor2d([6.4, 3.2, 4.5, 1.5], [1, 4]);
+            // Virginica
+            const testVal3 = tf.tensor2d([5.8,2.7,5.1,1.9], [1, 4]);
+            
+            const prediction1 = model.predict(testVal1);
+            const prediction2 = model.predict(testVal2);
+            const prediction3 = model.predict(testVal3);
+            const pIndex1 = tf.argMax(prediction1, axis=1).dataSync();
+            const pIndex2 = tf.argMax(prediction2, axis=1).dataSync();
+            const pIndex3 = tf.argMax(prediction3, axis=1).dataSync();
+            const classNames = ["Setosa", "Virginica", "Versicolor"];
+    
+            document.write( classNames +"<br />");
+            document.write( pIndex1 +"<br />");
+            document.write( prediction1 +"<br />");
+            document.write( pIndex2 +"<br />");
+            document.write( prediction2 +"<br />");
+            document.write( pIndex3 +"<br />");
+            document.write( prediction3 +"<br />");
+        }
+        run();
+    </script>
+<body>
+</body>
+</html>
